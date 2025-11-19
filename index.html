@@ -2,57 +2,127 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Minimal Audio Volume Button</title>
+
+<!-- Font Awesome -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
-  /* Container */
-  .volume-widget {
-    display: inline-flex;
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+  }
+
+  /* Popup Overlay */
+  #audioPopup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    z-index: 9999;
+  }
+
+  #audioPopupContent {
+    background: #fff;
+    padding: 22px 28px;
+    border-radius: 14px;
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  #audioPopup button {
+    margin-top: 14px;
+    background: #ffb6c1;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
   }
 
   /* Volume Button */
   .volume-btn {
-    background: #ffb6c1; /* light pink */
+    background: #ffb6c1;
     border: none;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 22px;
     cursor: pointer;
-    font-weight: bold;
     color: #333;
-    transition: background 0.2s;
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    z-index: 8888;
+
+    /* Pulse Animation */
+    animation: pulse 1.8s infinite;
   }
 
-  .volume-btn:hover {
-    background: #ffa7b5;
+  /* Pulse effect */
+  @keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,182,193,0.6); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 18px rgba(255,182,193,0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,182,193,0); }
   }
 </style>
 </head>
+
 <body>
 
-<div class="volume-widget">
-  <button id="volBtn" class="volume-btn">🔈</button>
+<!-- Popup -->
+<div id="audioPopup">
+  <div id="audioPopupContent">
+    <h3>Tap to enable audio 🎵</h3>
+    <p>Your browser requires interaction to play sound.</p>
+    <button id="enableAudioBtn">Enable Audio</button>
+  </div>
 </div>
 
-<audio id="player" autoplay loop>
+<!-- Volume Button -->
+<button id="volBtn" class="volume-btn">
+  <i class="fas fa-volume-mute"></i>
+</button>
+
+<!-- Audio -->
+<audio id="player" autoplay loop muted>
   <source src="https://melowskee.github.io/archi-hanz-invitation/Taylor%20Swift%20invisible%20string%20(Official%20Lyric%20Video).mp3" type="audio/mpeg">
 </audio>
 
 <script>
-  const player = document.getElementById('player');
-  const volBtn = document.getElementById('volBtn');
+  const player   = document.getElementById('player');
+  const volBtn   = document.getElementById('volBtn');
+  const icon     = volBtn.querySelector('i');
+  const popup    = document.getElementById('audioPopup');
+  const enableBtn = document.getElementById('enableAudioBtn');
 
-  // Some browsers block autoplay until user interacts
-  document.body.addEventListener('click', function enableAudio() {
+  /* Enable audio after clicking the popup */
+  enableBtn.addEventListener('click', () => {
+    player.muted = false;
     player.play().catch(()=>{});
-    document.body.removeEventListener('click', enableAudio);
+    popup.style.display = "none";
+
+    icon.classList.remove('fa-volume-mute');
+    icon.classList.add('fa-volume-up');
   });
 
+  /* Manual volume toggle */
   volBtn.addEventListener('click', () => {
     player.muted = !player.muted;
-    volBtn.textContent = player.muted ? '🔇' : '🔈';
+
+    if (player.muted) {
+      icon.classList.remove('fa-volume-up');
+      icon.classList.add('fa-volume-mute');
+    } else {
+      icon.classList.remove('fa-volume-mute');
+      icon.classList.add('fa-volume-up');
+    }
   });
 </script>
 
