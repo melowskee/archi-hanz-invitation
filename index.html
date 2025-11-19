@@ -1,172 +1,60 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Simple Play / Stop Audio Widget</title>
-  <style>
-    :root {
-      --pink: #ffb6c1; /* light pink */
-      --pink-dark: #ff9fb3;
-      --bg: #ffffff;
-      --text: #111;
-      --radius: 10px;
-      --pad: 12px 18px;
-      --shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }
+<meta charset="utf-8">
+<title>Minimal Audio Volume Button</title>
+<style>
+  /* Container */
+  .volume-widget {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
 
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: linear-gradient(180deg, #fff 0%, #fff7f9 100%);
-      color: var(--text);
-    }
+  /* Volume Button */
+  .volume-btn {
+    background: #ffb6c1; /* light pink */
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+    transition: background 0.2s;
+  }
 
-    .widget {
-      background: var(--bg);
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: var(--shadow);
-      display: inline-flex;
-      gap: 12px;
-      align-items: center;
-      border: 1px solid rgba(0,0,0,0.04);
-    }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .btn {
-      appearance: none;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      padding: var(--pad);
-      border-radius: var(--radius);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-      transition: transform .08s ease, box-shadow .12s ease;
-      user-select: none;
-    }
-
-    .btn:active { transform: translateY(1px); }
-
-    .btn-play {
-      background: linear-gradient(180deg, var(--pink) 0%, var(--pink-dark) 100%);
-      color: #111;
-    }
-
-    .btn-stop {
-      background: transparent;
-      color: #444;
-      border: 1px solid rgba(0,0,0,0.06);
-      padding: 10px 14px;
-      border-radius: 10px;
-    }
-
-    .track-info {
-      font-size: 13px;
-      color: #333;
-      margin-left: 6px;
-      max-width: 220px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* small responsive tweak */
-    @media (max-width:420px){
-      .widget { padding: 12px; gap:8px; }
-      .btn { padding: 8px 12px; }
-      .track-info { display:none; }
-    }
-  </style>
+  .volume-btn:hover {
+    background: #ffa7b5;
+  }
+</style>
 </head>
 <body>
 
-  <div class="widget" role="region" aria-label="Audio player widget">
-    <!-- Replace the src below with your GitHub raw mp3 URL -->
-    <audio id="player" preload="none">
-      <source src="https://melowskee.github.io/archi-hanz-invitation/Taylor%20Swift%20invisible%20string%20(Official%20Lyric%20Video).mp3" type="audio/mpeg">
-      Your browser does not support the audio element.
-    </audio>
+<div class="volume-widget">
+  <button id="volBtn" class="volume-btn">🔈</button>
+</div>
 
-    <div class="controls" aria-hidden="false">
-      <button id="playBtn" class="btn btn-play" aria-pressed="false" aria-label="Play audio">
-        ▶ Play
-      </button>
+<audio id="player" autoplay loop>
+  <source src="https://melowskee.github.io/archi-hanz-invitation/Taylor%20Swift%20invisible%20string%20(Official%20Lyric%20Video).mp3" type="audio/mpeg">
+</audio>
 
-      <button id="stopBtn" class="btn btn-stop" aria-label="Stop audio">
-        ■ Stop
-      </button>
-    </div>
+<script>
+  const player = document.getElementById('player');
+  const volBtn = document.getElementById('volBtn');
 
-    <div class="track-info" id="trackInfo">Track: GitHub-hosted MP3</div>
-  </div>
+  // Some browsers block autoplay until user interacts
+  document.body.addEventListener('click', function enableAudio() {
+    player.play().catch(()=>{});
+    document.body.removeEventListener('click', enableAudio);
+  });
 
-  <script>
-    (function(){
-      const player = document.getElementById('player');
-      const playBtn = document.getElementById('playBtn');
-      const stopBtn = document.getElementById('stopBtn');
-      const info = document.getElementById('trackInfo');
-
-      // If you want to show the file name automatically from the URL:
-      try {
-        const src = player.querySelector('source').src || '';
-        if(src){
-          const name = decodeURIComponent(src.split('/').pop().split('?')[0]);
-          info.textContent = name ? `Track: ${name}` : info.textContent;
-        }
-      } catch(e){ /* ignore */ }
-
-      playBtn.addEventListener('click', async () => {
-        try {
-          if (player.paused) {
-            await player.play();
-            playBtn.textContent = '⏸ Pause';
-            playBtn.setAttribute('aria-pressed','true');
-            playBtn.setAttribute('aria-label','Pause audio');
-          } else {
-            player.pause();
-            playBtn.textContent = '▶ Play';
-            playBtn.setAttribute('aria-pressed','false');
-            playBtn.setAttribute('aria-label','Play audio');
-          }
-        } catch(err) {
-          // Play may be blocked (autoplay policy) — show a simple alert/console
-          console.warn('Playback failed:', err);
-          alert('Playback blocked. Please interact with the page or check the audio URL.');
-        }
-      });
-
-      stopBtn.addEventListener('click', () => {
-        player.pause();
-        player.currentTime = 0;
-        playBtn.textContent = '▶ Play';
-        playBtn.setAttribute('aria-pressed','false');
-        playBtn.setAttribute('aria-label','Play audio');
-      });
-
-      // Optional: update button state when audio ends
-      player.addEventListener('ended', () => {
-        playBtn.textContent = '▶ Play';
-        playBtn.setAttribute('aria-pressed','false');
-      });
-
-      // Show error if audio fails to load
-      player.addEventListener('error', (e) => {
-        console.error('Audio error', e);
-        info.textContent = 'Unable to load audio — check the URL or permissions.';
-      });
-    })();
-  </script>
+  volBtn.addEventListener('click', () => {
+    player.muted = !player.muted;
+    volBtn.textContent = player.muted ? '🔇' : '🔈';
+  });
+</script>
 
 </body>
 </html>
